@@ -7,14 +7,28 @@ from mysql.connector import connect, Error
 def extraction(line:str)->list[tuple[str,...]]:
     data=[]
     pattern_failed=r'^(\w{3}\s+\d{1,2}\s+\d{2}:\d{2}:\d{2})\s+.+Failed password for invalid user\s+(\w+)\s+from\s+(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})'
-    patten_invalid=r''
-    match=re.search(pattern_failed,line)
-    if match :
-        date=match.group(1)
-        user=match.group(2)
-        
-        ip=match.group(3)
-        data.append((date,user,ip,'failed'))
+    pattern_invalid=r'^(\w{3}\s+\d{1,2}\s+\d{2}:\d{2}:\d{2})\s+.+Invalid user\s+(\w+)\s+from\s+(\d{1,3}(?:\.\d{1,3}){3})'
+    pattern_unknown =r'^(\w{3}\s+\d{1,2}\s+\d{2}:\d{2}:\d{2})\s+.+pam_unix\(sshd:auth\): check pass; user unknown'
+    match_failed = re.search(pattern_failed, line)
+    match_unknown = re.search(pattern_unknown, line)
+    match_invalid = re.search(pattern_invalid, line)
+
+    if match_failed:
+        date = match_failed.group(1)
+        user = match_failed.group(2)
+        ip = match_failed.group(3)
+        data.append((date, user, ip, 'failed_password'))
+
+    elif match_invalid:
+        date = match_invalid.group(1)
+        user = match_invalid.group(2)
+        ip = match_invalid.group(3)
+        data.append((date, user, ip, 'invalid_user'))
+
+    elif match_unknown:
+        date = match_unknown.group(1)
+        data.append((date, 'unknown', 'N/A', 'user_unknown'))
+
     return data
 
 def translation(data: list[tuple[str, ...]]) -> list[str]:
@@ -44,7 +58,6 @@ def load_data(translated_lines: list[str]) -> None:
             database="logs_db"
         )
         cursor = connection.cursor()
-
         create_table_query = """
         CREATE TABLE IF NOT EXISTS logs (
             id INT AUTO_INCREMENT PRIMARY KEY,
@@ -53,7 +66,6 @@ def load_data(translated_lines: list[str]) -> None:
         )
         """
         cursor.execute(create_table_query)
-
         for line in translated_lines:
             cursor.execute("INSERT INTO logs (log_line) VALUES (%s)", (line,))
         connection.commit()
