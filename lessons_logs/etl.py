@@ -44,6 +44,16 @@ def load_data(translated_lines: list[str]) -> None:
             database="logs_db"
         )
         cursor = connection.cursor()
+
+        create_table_query = """
+        CREATE TABLE IF NOT EXISTS logs (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            log_line TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+        """
+        cursor.execute(create_table_query)
+
         for line in translated_lines:
             cursor.execute("INSERT INTO logs (log_line) VALUES (%s)", (line,))
         connection.commit()
