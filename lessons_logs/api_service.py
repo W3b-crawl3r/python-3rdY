@@ -1,10 +1,12 @@
+
 from typing import Final
 import requests
-from config import load_config
+import os
+from dotenv import load_dotenv
 
-config = load_config()
-API: Final[str] = config['api_url']
-API_KEY: Final[str] = config['api_key']
+load_dotenv()
+API:Final[str] = "https://ipinfo.io/"
+API_KEY:Final[str] = os.environ.get('API_KEY', '')
 
 def get_location(ip: str) -> dict[str, str]:
     location_response = requests.get(API + ip + '?token=' + API_KEY)
