@@ -2,3 +2,8 @@
 __pycache__/
 config.py
 .env
+auth.log.1
+auth.log.2
+auth.log.3
+auth.log.4
+auth.log
