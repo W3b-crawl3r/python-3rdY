@@ -18,20 +18,17 @@ def extraction(line:str)->list[tuple[str,...]]:
         user = match_failed.group(2)
         ip = match_failed.group(3)
         data.append((date, user, ip, 'failed_password'))
-
     elif match_invalid:
         date = match_invalid.group(1)
         user = match_invalid.group(2)
         ip = match_invalid.group(3)
         data.append((date, user, ip, 'invalid_user'))
-
     elif match_unknown:
         date = match_unknown.group(1)
         data.append((date, 'unknown', 'N/A', 'user_unknown'))
-
     return data
 
-def translation(data: list[tuple[str, ...]]) -> list[str]:
+def translation(data: list[tuple[str, ...]]) -> list[tuple[str, str, str, str]]:
     translated_lines = []
     current_year = datetime.now().year
     tz = timezone(timedelta(hours=1))
@@ -45,11 +42,14 @@ def translation(data: list[tuple[str, ...]]) -> list[str]:
             iso_date = f"{current_year}-01-01T00:00:00+01:00"  # fallback
         level = "INFO" if status == "successful" else "WARNING"
         service = "auth"
-        formatted_line = f"{iso_date} level={level} service={service} user={user} ip={ip}"
-        translated_lines.append(formatted_line)
+        translated_lines.append((iso_date, user, ip, status))
     return translated_lines
 
-def load_data(translated_lines: list[str]) -> None:
+def load_data(translated_lines: list[tuple[str, str, str, str]]) -> None:
+    """
+    Stores parsed SSH log data into MySQL in separate columns:
+    (date, user, ip, status)
+    """
     try:
         connection = connect(
             host="localhost",
@@ -61,14 +61,21 @@ def load_data(translated_lines: list[str]) -> None:
         create_table_query = """
         CREATE TABLE IF NOT EXISTS logs (
             id INT AUTO_INCREMENT PRIMARY KEY,
-            log_line TEXT NOT NULL,
+            log_date VARCHAR(50),
+            username VARCHAR(100),
+            ip_address VARCHAR(45),
+            status VARCHAR(50),
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
         """
         cursor.execute(create_table_query)
-        for line in translated_lines:
-            cursor.execute("INSERT INTO logs (log_line) VALUES (%s)", (line,))
+        insert_query = """
+        INSERT INTO logs (log_date, username, ip_address, status)
+        VALUES (%s, %s, %s, %s)
+        """
+        cursor.executemany(insert_query, translated_lines)
         connection.commit()
+        print(f"{cursor.rowcount} rows inserted successfully.")
     except Error as e:
         print(f"Error: {e}")
     finally:
