@@ -1,0 +1,9 @@
+GET  http://localhost:8000/users
+### register new user
+POST http://localhost:8000/users
+Content-Type: application/json
+
+{
+    "email": "u6@app.com",
+    "password": "123456789"
+}
