@@ -20,9 +20,9 @@ if __name__=='__main__':
 
 
 
-    """  init_db()
-    user_1:UserRequest=UserRequest(email="u4@app.com",password='1234')
-    user_2:UserRequest=UserRequest(email="u5@app.com",password='1234')
+    """ init_db()
+    user_1:UserRequest=UserRequest(email="u1@app.com",password='1234')
+    user_2:UserRequest=UserRequest(email="u2@app.com",password='1234')
     userService:UserService=UserService()
     userService.creat_user(user_1)
     userService.creat_user(user_2)
