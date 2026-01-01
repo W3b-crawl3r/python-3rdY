@@ -1,9 +1,19 @@
-GET  http://localhost:8000/users
+@BASE_URL=http://localhost:8000/users
+
+### get all users
+GET  {{BASE_URL}}/
+
 ### register new user
-POST http://localhost:8000/users
+POST {{BASE_URL}}/
 Content-Type: application/json
 
 {
-    "email": "u6@app.com",
+    "email": "u8@app.com",
     "password": "123456789"
 }
+
+### delete user by email 
+DELETE {{BASE_URL}}/u8@app.com
+
+### search by email
+GET {{BASE_URL}}/u4@app.com

@@ -12,7 +12,7 @@ app=FastAPI(title="Banking API ",version="1.0")
 app.include_router(router_users)
 if __name__=='__main__':
     init_db()
-    uvicorn.run("main:app",host="0.0.0.0")
+    uvicorn.run("main:app",host="0.0.0.0",reload=True)
 
 
 
